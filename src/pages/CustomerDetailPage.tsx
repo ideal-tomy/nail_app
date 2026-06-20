@@ -44,7 +44,6 @@ export function CustomerDetailPage() {
   const [canceling, setCanceling] = useState<ReservationWithCustomer | null>(null)
 
   const latestVisit = useMemo(() => visits[0] ?? null, [visits])
-  const pastVisits = useMemo(() => visits.slice(1), [visits])
   const upcomingReservations = useMemo(
     () => reservations.filter((r) => r.status === 'booked'),
     [reservations],
@@ -156,6 +155,8 @@ export function CustomerDetailPage() {
 
   const visitsContent = (
     <div className="space-y-3">
+      {visitsLoading && <p className="text-sm text-mauve">読み込み中...</p>}
+
       {!visitsLoading && visits.length === 0 && (
         <EmptyState
           title="来店履歴はまだありません"
@@ -163,11 +164,12 @@ export function CustomerDetailPage() {
         />
       )}
 
-      {pastVisits.length > 0 && (
+      {visits.length > 0 && (
         <Accordion>
-          {pastVisits.map((visit) => (
+          {visits.map((visit, index) => (
             <AccordionItem
               key={visit.id}
+              defaultOpen={index === 0}
               title={
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium text-ink">
@@ -189,10 +191,6 @@ export function CustomerDetailPage() {
             </AccordionItem>
           ))}
         </Accordion>
-      )}
-
-      {visits.length === 1 && latestVisit && (
-        <p className="text-sm text-mauve">過去の来店はありません（最新のみ）</p>
       )}
     </div>
   )
@@ -241,13 +239,6 @@ export function CustomerDetailPage() {
       <Link to="/customers" className="inline-block text-sm text-mauve hover:text-plum">
         ← 顧客一覧へ
       </Link>
-
-      {customer.booking_notes && (
-        <Card padding="sm" className="border-plum/30 bg-petal/20">
-          <p className="text-xs text-plum">予約対応メモ</p>
-          <p className="mt-1 text-sm text-ink">{customer.booking_notes}</p>
-        </Card>
-      )}
 
       <Card padding="sm">
         <p className="mb-3 text-sm font-medium text-ink">{customer.name} さん</p>

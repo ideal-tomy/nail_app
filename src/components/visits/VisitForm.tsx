@@ -80,25 +80,36 @@ export function VisitForm({
 
       if (visitError) throw visitError
 
-      for (const file of files) {
-        const compressed = await compressImage(file)
-        const storagePath = generateImagePath(customerId, visit.id)
+      const uploadedPaths: string[] = []
 
-        const { error: uploadError } = await supabase.storage
-          .from('nail-images')
-          .upload(storagePath, compressed, {
-            contentType: 'image/jpeg',
-            upsert: false,
+      try {
+        for (const file of files) {
+          const compressed = await compressImage(file)
+          const storagePath = generateImagePath(customerId, visit.id)
+
+          const { error: uploadError } = await supabase.storage
+            .from('nail-images')
+            .upload(storagePath, compressed, {
+              contentType: 'image/jpeg',
+              upsert: false,
+            })
+
+          if (uploadError) throw uploadError
+
+          const { error: imageError } = await supabase.from('visit_images').insert({
+            visit_id: visit.id,
+            storage_path: storagePath,
           })
 
-        if (uploadError) throw uploadError
-
-        const { error: imageError } = await supabase.from('visit_images').insert({
-          visit_id: visit.id,
-          storage_path: storagePath,
-        })
-
-        if (imageError) throw imageError
+          if (imageError) throw imageError
+          uploadedPaths.push(storagePath)
+        }
+      } catch (imageUploadError) {
+        if (uploadedPaths.length > 0) {
+          await supabase.storage.from('nail-images').remove(uploadedPaths)
+        }
+        await supabase.from('visits').delete().eq('id', visit.id)
+        throw imageUploadError
       }
 
       if (reservationId) {
@@ -123,7 +134,9 @@ export function VisitForm({
       }
     } catch (submitError) {
       setError(
-        submitError instanceof Error ? submitError.message : '保存に失敗しました',
+        submitError instanceof Error
+          ? submitError.message
+          : '保存に失敗しました。画像のアップロードに問題がある場合は、再度お試しください。',
       )
     } finally {
       setSaving(false)

@@ -6,7 +6,6 @@ import { LoginPage } from './pages/LoginPage'
 import { HomePage } from './pages/HomePage'
 import { CustomersPage } from './pages/CustomersPage'
 import { CustomerDetailPage } from './pages/CustomerDetailPage'
-import { VisitCreatePage } from './pages/VisitCreatePage'
 import { CalendarPage } from './pages/CalendarPage'
 import { BroadcastPage } from './pages/BroadcastPage'
 import { VisitsPage } from './pages/VisitsPage'
@@ -31,10 +30,6 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/customers/:id" element={<CustomerDetailPage />} />
-              <Route
-                path="/customers/:id/visits/new"
-                element={<VisitCreatePage />}
-              />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/broadcast" element={<BroadcastPage />} />
               <Route path="/visits" element={<VisitsPage />} />

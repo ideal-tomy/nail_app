@@ -17,6 +17,11 @@ export function VisitAnalyticsSummaryCards({
       hint: '2回以上来店の顧客',
     },
     { label: '来店顧客数', value: `${summary.customersWithVisits}名` },
+    {
+      label: '累計売上',
+      value: `¥${summary.totalRevenue.toLocaleString('ja-JP')}`,
+      hint: '価格入力済みの来店のみ',
+    },
   ]
 
   return (

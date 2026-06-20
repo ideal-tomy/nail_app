@@ -18,16 +18,3 @@ export function useVisits(customerId: string | undefined) {
     },
   })
 }
-
-export async function fetchLatestVisitWithImages(customerId: string) {
-  const { data, error } = await supabase
-    .from('visits')
-    .select('*, visit_images(*)')
-    .eq('customer_id', customerId)
-    .order('visit_date', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (error) throw error
-  return data as VisitWithImages | null
-}

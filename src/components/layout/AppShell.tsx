@@ -8,7 +8,7 @@ interface AppShellProps {
 }
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] transition sm:text-xs ${
+  `flex min-w-0 flex-1 flex-col items-center gap-0.5 px-0.5 py-2 text-[11px] transition sm:text-xs ${
     isActive ? 'text-plum font-medium' : 'text-mauve'
   }`
 

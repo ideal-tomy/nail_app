@@ -271,10 +271,7 @@ export function useReservationMutations() {
     onSuccess: invalidateAll,
   })
 
-  /** @deprecated use cancelWithReason */
-  const cancel = cancelWithReason
-
-  return { create, update, cancel, cancelWithReason, reschedule, remove, markDone }
+  return { create, update, cancelWithReason, reschedule, remove, markDone }
 }
 
 export function formatReservationTime(isoString: string): string {
