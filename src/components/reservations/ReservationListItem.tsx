@@ -117,30 +117,43 @@ export function ReservationListItem({
       </div>
 
       {isBooked && (onEdit || onReschedule || onCancel || onConvert) && (
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {onReschedule && (
-            <Button
-              variant="secondary"
-              className="col-span-2 sm:flex-1 sm:min-w-[100px]"
-              onClick={onReschedule}
-            >
-              日時変更
-            </Button>
+        <div className="mt-3 space-y-3">
+          {(onReschedule || onCancel) && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-mauve">予約の変更</p>
+              {onReschedule && (
+                <Button variant="secondary" className="w-full" onClick={onReschedule}>
+                  日時変更
+                </Button>
+              )}
+              {onCancel && (
+                <Button
+                  variant="ghost"
+                  className="w-full border border-mauve/50 text-plum"
+                  onClick={onCancel}
+                >
+                  予約をキャンセル
+                </Button>
+              )}
+            </div>
           )}
-          {onConvert && (
-            <Button className="sm:flex-1 sm:min-w-[100px]" onClick={onConvert}>
-              来店記録
-            </Button>
-          )}
-          {onEdit && (
-            <Button variant="secondary" className="sm:flex-1 sm:min-w-[80px]" onClick={onEdit}>
-              詳細編集
-            </Button>
-          )}
-          {onCancel && (
-            <Button variant="ghost" className="sm:flex-1 sm:min-w-[80px]" onClick={onCancel}>
-              キャンセル
-            </Button>
+
+          {(onConvert || onEdit) && (
+            <div className="space-y-2 border-t border-petal/60 pt-3">
+              <p className="text-xs font-medium text-mauve">来店・詳細</p>
+              <div className="grid grid-cols-2 gap-2">
+                {onConvert && (
+                  <Button className="w-full" onClick={onConvert}>
+                    来店記録
+                  </Button>
+                )}
+                {onEdit && (
+                  <Button variant="secondary" className="w-full" onClick={onEdit}>
+                    詳細編集
+                  </Button>
+                )}
+              </div>
+            </div>
           )}
         </div>
       )}

@@ -94,7 +94,7 @@ export function ReservationRescheduleModal({
 
       <div className="flex gap-3">
         <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-          戻る
+          閉じる
         </Button>
         <Button type="submit" className="flex-1" disabled={saving}>
           {saving ? '変更中...' : '日時を変更'}

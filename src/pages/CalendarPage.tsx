@@ -40,13 +40,16 @@ export function CalendarPage() {
   const { data: todayReservations = [] } = useTodayReservations()
 
   const selectedDayReservations = useMemo(() => {
-    if (!selectedDate) return []
-    return monthReservations.filter(
-      (r) =>
-        toDateKey(r.start_at) === selectedDate &&
-        r.status !== 'canceled' &&
-        r.status !== 'no_show',
+    if (!selectedDate) return { active: [], canceled: [] }
+    const onDay = monthReservations.filter(
+      (r) => toDateKey(r.start_at) === selectedDate,
     )
+    return {
+      active: onDay.filter((r) => r.status === 'booked'),
+      canceled: onDay.filter(
+        (r) => r.status === 'canceled' || r.status === 'no_show',
+      ),
+    }
   }, [monthReservations, selectedDate])
 
   const handlePrevMonth = () => {
@@ -94,20 +97,33 @@ export function CalendarPage() {
             ? `${selectedDate.replace(/-/g, '/')} の予約`
             : '日付を選択してください'}
         </h3>
-        {selectedDayReservations.length === 0 ? (
+        {selectedDayReservations.active.length === 0 &&
+        selectedDayReservations.canceled.length === 0 ? (
           <EmptyState
             title="予約はありません"
             description="＋予約を追加から登録できます"
           />
         ) : (
           <div className="space-y-3">
-            {selectedDayReservations.map((reservation) => (
+            {selectedDayReservations.active.map((reservation) => (
               <ReservationListItem
                 key={reservation.id}
                 reservation={reservation}
                 {...reservationActions(reservation)}
               />
             ))}
+            {selectedDayReservations.canceled.length > 0 && (
+              <section className="space-y-2 pt-2">
+                <h4 className="text-sm font-medium text-mauve">キャンセル済み</h4>
+                {selectedDayReservations.canceled.map((reservation) => (
+                  <ReservationListItem
+                    key={reservation.id}
+                    reservation={reservation}
+                    compact
+                  />
+                ))}
+              </section>
+            )}
           </div>
         )}
       </section>

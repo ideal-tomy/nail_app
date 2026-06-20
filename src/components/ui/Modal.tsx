@@ -11,7 +11,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/30 p-4 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/30 p-4 pb-24 sm:items-center sm:pb-4">
       <button
         type="button"
         aria-label="閉じる"

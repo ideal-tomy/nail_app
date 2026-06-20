@@ -180,7 +180,7 @@ export function useReservationMutations() {
       const status: ReservationStatus =
         cancelSource === 'no_show' ? 'no_show' : 'canceled'
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('reservations')
         .update({
           status,
@@ -191,8 +191,24 @@ export function useReservationMutations() {
         })
         .eq('id', id)
         .eq('status', 'booked')
+        .select('id')
+        .maybeSingle()
 
-      if (error) throw error
+      if (error) {
+        if (
+          error.message.includes('cancel_reason') ||
+          error.message.includes('cancel_source') ||
+          error.message.includes('no_show')
+        ) {
+          throw new Error(
+            'キャンセル用のDB列が未設定です。Supabaseで migrations/003 を実行してください。',
+          )
+        }
+        throw error
+      }
+      if (!data) {
+        throw new Error('予約が見つからないか、すでにキャンセル済みです')
+      }
     },
     onSuccess: invalidateAll,
   })

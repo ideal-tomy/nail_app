@@ -143,7 +143,7 @@ export function ReservationCancelModal({
           onClick={onClose}
           disabled={saving}
         >
-          戻る
+          閉じる
         </Button>
         <button
           type="button"
