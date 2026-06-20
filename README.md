@@ -24,6 +24,7 @@ npm install
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_ALLOWED_EMAILS=nailluv.0212@icloud.com,ryojitomii@gmail.com
 ```
 
 `seed:storage` スクリプトを使う場合のみ、追加で以下が必要です。
@@ -48,14 +49,19 @@ npx supabase link --project-ref YOUR_PROJECT_REF
 npx supabase db push
 ```
 
-### 4. 認証ユーザー
+### 4. 認証ユーザー（許可メールのみログイン可）
 
-サインアップ UI はありません。Supabase Dashboard → **Authentication → Users** で、ネイリスト本人のメールアドレスを登録してください。
+ログインは **許可リストに登録されたメール** のみ可能です。
 
-**Authentication → URL Configuration** で以下を設定します。
+1. **Supabase Dashboard → Authentication → Users** で、以下の2アカウントを **Add user** で作成
+   - `nailluv.0212@icloud.com`
+   - `ryojitomii@gmail.com`
+2. **Authentication → Providers → Email** で **「Allow new users to sign up」を OFF** にする（新規自動登録を禁止）
+3. **Authentication → URL Configuration** で以下を設定
+   - **Site URL**: 本番ドメイン（例: `https://nailapp-eight.vercel.app`）
+   - **Redirect URLs**: 本番ドメインと `http://localhost:5173`（ローカル開発用）
 
-- **Site URL**: 本番ドメイン（例: `https://your-app.vercel.app`）
-- **Redirect URLs**: 本番ドメインと `http://localhost:5173`（ローカル開発用）
+アプリ側でも `VITE_ALLOWED_EMAILS` と `shouldCreateUser: false` により、未許可メールはログインリンク送信前に拒否されます。
 
 ### 5. 開発サーバー起動
 
@@ -80,6 +86,7 @@ npx vercel --prod
 |--------|------|
 | `VITE_SUPABASE_URL` | Supabase プロジェクト URL |
 | `VITE_SUPABASE_ANON_KEY` | Supabase anon key |
+| `VITE_ALLOWED_EMAILS` | ログイン許可メール（カンマ区切り） |
 
 **Production / Preview / Development** すべてに設定してください。
 

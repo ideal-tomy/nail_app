@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import { getAllowedEmails } from '../lib/authAllowlist'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/ui/Button'
 
@@ -9,6 +10,8 @@ export function LoginPage() {
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const allowedEmails = getAllowedEmails()
 
   if (session) {
     return <Navigate to="/" replace />
@@ -39,7 +42,8 @@ export function LoginPage() {
         <p className="text-sm text-mauve">ネイルサロン顧客管理</p>
         <h1 className="mt-2 text-2xl font-medium text-ink">ログイン</h1>
         <p className="mt-3 text-sm leading-relaxed text-mauve">
-          登録メールアドレスにマジックリンクを送信します。
+          登録済みのメールアドレスにマジックリンクを送信します。
+          未登録のアドレスではログインできません。
         </p>
 
         {sent ? (
@@ -56,9 +60,13 @@ export function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="field-input"
-                placeholder="you@example.com"
+                placeholder="登録済みのメールアドレス"
+                autoComplete="email"
               />
             </label>
+            <p className="text-xs leading-relaxed text-mauve">
+              ログイン可能: {allowedEmails.join(' / ')}
+            </p>
             {error && <p className="text-sm text-plum">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? '送信中...' : 'ログインリンクを送る'}
