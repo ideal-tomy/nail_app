@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+:root {
+  --porcelain: #fffbfc;
+  --blush: #fceef1;
+  --petal: #f8dce3;
+  --mauve: #c99ca8;
+  --plum: #8e4d63;
+  --ink: #3a2e33;
+  --line-green: #06c755;
+}
+
+@theme {
+  --color-porcelain: var(--porcelain);
+  --color-blush: var(--blush);
+  --color-petal: var(--petal);
+  --color-mauve: var(--mauve);
+  --color-plum: var(--plum);
+  --color-ink: var(--ink);
+  --color-line-green: var(--line-green);
+  --font-heading: "Zen Maru Gothic", sans-serif;
+  --font-body: "Noto Sans JP", sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background-color: var(--porcelain);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+}
+
+.field-input {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--petal) 80%, var(--mauve));
+  background-color: var(--porcelain);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field-input:focus {
+  border-color: var(--mauve);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--petal) 60%, transparent);
+}

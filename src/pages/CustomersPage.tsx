@@ -1,0 +1,114 @@
+import { useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useCustomers, useCustomerStatuses } from '../hooks/useCustomers'
+import { CustomerListItem } from '../components/customers/CustomerListItem'
+import { CustomerForm } from '../components/customers/CustomerForm'
+import { Button } from '../components/ui/Button'
+import { Modal } from '../components/ui/Modal'
+import { supabase } from '../lib/supabase'
+import type { CustomerFormData } from '../types/database'
+
+type SortKey = 'name' | 'lastVisit'
+
+export function CustomersPage() {
+  const queryClient = useQueryClient()
+  const { data: customers = [], isLoading, error } = useCustomers()
+  const { data: statuses = [] } = useCustomerStatuses()
+  const [search, setSearch] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('name')
+  const [showCreate, setShowCreate] = useState(false)
+
+  const statusMap = useMemo(
+    () => new Map(statuses.map((status) => [status.id, status])),
+    [statuses],
+  )
+
+  const filteredCustomers = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase()
+
+    const list = customers.filter((customer) =>
+      customer.name.toLowerCase().includes(normalizedSearch),
+    )
+
+    return list.sort((a, b) => {
+      if (sortKey === 'name') {
+        return a.name.localeCompare(b.name, 'ja')
+      }
+
+      const aDate = statusMap.get(a.id)?.last_visit ?? ''
+      const bDate = statusMap.get(b.id)?.last_visit ?? ''
+      return bDate.localeCompare(aDate)
+    })
+  }, [customers, search, sortKey, statusMap])
+
+  const handleCreate = async (form: CustomerFormData) => {
+    const { error: insertError } = await supabase.from('customers').insert({
+      name: form.name.trim(),
+      contact: form.contact.trim() || null,
+      preferences: form.preferences.trim() || null,
+      notes: form.notes.trim() || null,
+      booking_notes: form.booking_notes.trim() || null,
+    })
+
+    if (insertError) throw insertError
+
+    await queryClient.invalidateQueries({ queryKey: ['customers'] })
+    await queryClient.invalidateQueries({ queryKey: ['customer-status'] })
+    setShowCreate(false)
+  }
+
+  return (
+    <div className="space-y-5">
+      <section className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-medium text-ink">顧客一覧</h2>
+          <p className="mt-1 text-sm text-mauve">全顧客の検索と管理</p>
+        </div>
+        <Button onClick={() => setShowCreate(true)}>＋新規</Button>
+      </section>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="field-input sm:col-span-1"
+          placeholder="名前で検索"
+        />
+        <select
+          value={sortKey}
+          onChange={(e) => setSortKey(e.target.value as SortKey)}
+          className="field-input"
+        >
+          <option value="name">名前順</option>
+          <option value="lastVisit">最終来店日順</option>
+        </select>
+      </div>
+
+      {isLoading && <p className="text-sm text-mauve">読み込み中...</p>}
+
+      {error && (
+        <p className="text-sm text-plum">
+          {error instanceof Error ? error.message : '取得に失敗しました'}
+        </p>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        {filteredCustomers.map((customer) => (
+          <CustomerListItem
+            key={customer.id}
+            customer={customer}
+            status={statusMap.get(customer.id)}
+          />
+        ))}
+      </div>
+
+      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新規顧客">
+        <CustomerForm
+          submitLabel="登録する"
+          onSubmit={handleCreate}
+          onCancel={() => setShowCreate(false)}
+        />
+      </Modal>
+    </div>
+  )
+}

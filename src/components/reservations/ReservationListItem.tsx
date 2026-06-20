@@ -1,0 +1,149 @@
+import { Link } from 'react-router-dom'
+import {
+  formatCancelSource,
+  isTodayReservation,
+  isTomorrowReservation,
+} from '../../lib/reservationOps'
+import {
+  formatReservationDate,
+  formatReservationTime,
+} from '../../hooks/useReservations'
+import type { ReservationWithCustomer } from '../../types/database'
+import { Button } from '../ui/Button'
+import { Card } from '../ui/Card'
+
+interface ReservationListItemProps {
+  reservation: ReservationWithCustomer
+  onEdit?: () => void
+  onReschedule?: () => void
+  onCancel?: () => void
+  onConvert?: () => void
+  compact?: boolean
+}
+
+const statusLabels = {
+  booked: '予約済',
+  done: '来店済',
+  canceled: 'キャンセル',
+  no_show: '無断キャンセル',
+} as const
+
+const statusColors = {
+  booked: 'bg-petal text-plum',
+  done: 'bg-blush text-mauve',
+  canceled: 'bg-mauve/20 text-mauve',
+  no_show: 'bg-plum/20 text-plum',
+} as const
+
+export function ReservationListItem({
+  reservation,
+  onEdit,
+  onReschedule,
+  onCancel,
+  onConvert,
+  compact = false,
+}: ReservationListItemProps) {
+  const customerName = reservation.customers?.name ?? '不明'
+  const isBooked = reservation.status === 'booked'
+  const isPastCanceled =
+    reservation.status === 'canceled' || reservation.status === 'no_show'
+  const urgency =
+    isBooked && isTodayReservation(reservation.start_at)
+      ? 'today'
+      : isBooked && isTomorrowReservation(reservation.start_at)
+        ? 'tomorrow'
+        : null
+
+  return (
+    <Card
+      padding={compact ? 'sm' : 'md'}
+      className={
+        urgency === 'today'
+          ? 'ring-2 ring-plum/40'
+          : urgency === 'tomorrow'
+            ? 'ring-1 ring-mauve/50'
+            : ''
+      }
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to={`/customers/${reservation.customer_id}`}
+              className="font-medium text-ink hover:text-plum"
+            >
+              {customerName}
+            </Link>
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${statusColors[reservation.status]}`}
+            >
+              {statusLabels[reservation.status]}
+            </span>
+            {urgency === 'today' && (
+              <span className="rounded-full bg-plum px-2 py-0.5 text-xs text-porcelain">
+                本日
+              </span>
+            )}
+            {urgency === 'tomorrow' && (
+              <span className="rounded-full bg-mauve/30 px-2 py-0.5 text-xs text-plum">
+                明日
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-mauve">
+            {formatReservationDate(reservation.start_at)}{' '}
+            {formatReservationTime(reservation.start_at)}
+            {reservation.duration_min != null && ` · ${reservation.duration_min}分`}
+          </p>
+          {reservation.menu && (
+            <p className="mt-1 text-sm text-ink">{reservation.menu}</p>
+          )}
+          {reservation.notes && !compact && (
+            <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-mauve">
+              {reservation.notes}
+            </p>
+          )}
+          {isPastCanceled && reservation.cancel_reason && (
+            <p className="mt-2 text-xs text-mauve">
+              {formatCancelSource(reservation.cancel_source)}: {reservation.cancel_reason}
+            </p>
+          )}
+          {reservation.customers?.booking_notes && isBooked && (
+            <p className="mt-2 rounded-xl bg-petal/40 px-2 py-1 text-xs text-plum">
+              予約メモ: {reservation.customers.booking_notes}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {isBooked && (onEdit || onReschedule || onCancel || onConvert) && (
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {onReschedule && (
+            <Button
+              variant="secondary"
+              className="col-span-2 sm:flex-1 sm:min-w-[100px]"
+              onClick={onReschedule}
+            >
+              日時変更
+            </Button>
+          )}
+          {onConvert && (
+            <Button className="sm:flex-1 sm:min-w-[100px]" onClick={onConvert}>
+              来店記録
+            </Button>
+          )}
+          {onEdit && (
+            <Button variant="secondary" className="sm:flex-1 sm:min-w-[80px]" onClick={onEdit}>
+              詳細編集
+            </Button>
+          )}
+          {onCancel && (
+            <Button variant="ghost" className="sm:flex-1 sm:min-w-[80px]" onClick={onCancel}>
+              キャンセル
+            </Button>
+          )}
+        </div>
+      )}
+    </Card>
+  )
+}
