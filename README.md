@@ -49,19 +49,15 @@ npx supabase link --project-ref YOUR_PROJECT_REF
 npx supabase db push
 ```
 
-### 4. 認証ユーザー（許可メールのみログイン可）
+### 4. 認証ユーザー（許可メール + パスワード）
 
-ログインは **許可リストに登録されたメール** のみ可能です。
+ログインは **許可リストに登録されたメール + パスワード** のみ可能です（マジックリンクは使いません）。
 
-1. **Supabase Dashboard → Authentication → Users** で、以下の2アカウントを **Add user** で作成
+1. **Supabase Dashboard → Authentication → Users → Add user** で以下を作成（パスワードを設定）
    - `nailluv.0212@icloud.com`
    - `ryojitomii@gmail.com`
-2. **Authentication → Providers → Email** で **「Allow new users to sign up」を OFF** にする（新規自動登録を禁止）
-3. **Authentication → URL Configuration** で以下を設定
-   - **Site URL**: 本番ドメイン（例: `https://nailapp-eight.vercel.app`）
-   - **Redirect URLs**: 本番ドメインと `http://localhost:5173`（ローカル開発用）
-
-アプリ側でも `VITE_ALLOWED_EMAILS` と `shouldCreateUser: false` により、未許可メールはログインリンク送信前に拒否されます。
+2. **Authentication → Providers → Email** で **「Allow new users to sign up」を OFF** にする
+3. 既存ユーザーにパスワードが無い場合は、Users 一覧から該当ユーザーを開き **Reset password** で設定
 
 ### 5. 開発サーバー起動
 

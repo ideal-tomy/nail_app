@@ -34,22 +34,17 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signIn = async (email: string) => {
+  const signIn = async (email: string, password: string) => {
     const normalized = email.trim().toLowerCase()
     assertEmailAllowed(normalized)
 
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email: normalized,
-      options: {
-        emailRedirectTo: window.location.origin,
-        shouldCreateUser: false,
-      },
+      password,
     })
     if (error) {
-      if (error.message.toLowerCase().includes('signups not allowed')) {
-        throw new Error(
-          'このメールアドレスは登録されていません。管理者にアカウント作成を依頼してください。',
-        )
+      if (error.message.toLowerCase().includes('invalid login credentials')) {
+        throw new Error('メールアドレスまたはパスワードが正しくありません')
       }
       throw error
     }
