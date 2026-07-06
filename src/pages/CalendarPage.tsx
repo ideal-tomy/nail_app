@@ -17,9 +17,9 @@ import { ReservationCancelModal } from '../components/reservations/ReservationCa
 import { ReservationForm } from '../components/reservations/ReservationForm'
 import { ReservationListItem } from '../components/reservations/ReservationListItem'
 import { ReservationRescheduleModal } from '../components/reservations/ReservationRescheduleModal'
+import { TodayReservationsScroll } from '../components/reservations/TodayReservationsScroll'
 import { VisitForm } from '../components/visits/VisitForm'
 import { Button } from '../components/ui/Button'
-import { Card } from '../components/ui/Card'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Modal } from '../components/ui/Modal'
 import { SaveSuccessCard } from '../components/ui/SaveSuccessCard'
@@ -190,20 +190,16 @@ export function CalendarPage() {
       )}
 
       {todayReservations.length > 0 && (
-        <Card padding="sm">
-          <h3 className="text-sm font-medium text-plum">本日の予約 ({todayReservations.length}件)</h3>
-          <div className="mt-3 space-y-2">
-            {todayReservations.map((reservation) => (
-              <ReservationListItem
-                key={reservation.id}
-                reservation={reservation}
-                compact
-                customerBackState={calendarBackState}
-                {...reservationActions(reservation)}
-              />
-            ))}
-          </div>
-        </Card>
+        <section className="space-y-3">
+          <h3 className="text-sm font-medium text-plum">
+            本日の予約 ({todayReservations.length}件)
+          </h3>
+          <TodayReservationsScroll
+            reservations={todayReservations}
+            customerBackState={calendarBackState}
+            reservationActions={reservationActions}
+          />
+        </section>
       )}
 
       <Tabs

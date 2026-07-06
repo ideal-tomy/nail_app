@@ -24,6 +24,7 @@ interface ReservationListItemProps {
   onConfirm?: () => void
   compact?: boolean
   customerBackState?: BackNavigationState
+  className?: string
 }
 
 const statusLabels = {
@@ -49,6 +50,7 @@ export function ReservationListItem({
   onConfirm,
   compact = false,
   customerBackState,
+  className = '',
 }: ReservationListItemProps) {
   const [expanded, setExpanded] = useState(false)
   const [showReminder, setShowReminder] = useState(false)
@@ -70,16 +72,17 @@ export function ReservationListItem({
   const showFullActions =
     hasActions && (urgency === 'today' || urgency === 'tomorrow' || expanded)
 
+  const urgencyClass =
+    urgency === 'today'
+      ? 'ring-2 ring-plum/40'
+      : urgency === 'tomorrow'
+        ? 'ring-1 ring-mauve/50'
+        : ''
+
   return (
     <Card
       padding={compact ? 'sm' : 'md'}
-      className={
-        urgency === 'today'
-          ? 'ring-2 ring-plum/40'
-          : urgency === 'tomorrow'
-            ? 'ring-1 ring-mauve/50'
-            : ''
-      }
+      className={`h-full ${urgencyClass} ${className}`.trim()}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
