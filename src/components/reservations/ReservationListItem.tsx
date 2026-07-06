@@ -18,6 +18,7 @@ interface ReservationListItemProps {
   onReschedule?: () => void
   onCancel?: () => void
   onConvert?: () => void
+  onConfirm?: () => void
   compact?: boolean
 }
 
@@ -41,6 +42,7 @@ export function ReservationListItem({
   onReschedule,
   onCancel,
   onConvert,
+  onConfirm,
   compact = false,
 }: ReservationListItemProps) {
   const customerName = reservation.customers?.name ?? '不明'
@@ -116,8 +118,14 @@ export function ReservationListItem({
         </div>
       </div>
 
-      {isBooked && (onEdit || onReschedule || onCancel || onConvert) && (
+      {isBooked && (onEdit || onReschedule || onCancel || onConvert || onConfirm) && (
         <div className="mt-3 space-y-3">
+          {onConfirm && (
+            <Button variant="line" className="w-full" onClick={onConfirm}>
+              予約確定（LINE通知）
+            </Button>
+          )}
+
           {(onReschedule || onCancel) && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-mauve">予約の変更</p>

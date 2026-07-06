@@ -90,3 +90,30 @@ export const broadcastTemplates: MessageTemplate[] = [
 export function buildBroadcastMessage(template: MessageTemplate): string {
   return template.body
 }
+
+export function buildOffReminderMessage(name: string, lastDesign?: string | null): string {
+  const design = lastDesign?.trim() || 'デザイン'
+  return `${name}さん、こんにちは◎ 前回の${design}からそろそろ次回のオフ（付け替え）の時期ですよ！ご都合いかがですか？🌸`
+}
+
+export function buildReservationConfirmedMessage(
+  name: string,
+  startAt: string,
+  durationMin?: number | null,
+): string {
+  const date = new Date(startAt)
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  const startHours = String(date.getHours()).padStart(2, '0')
+  const startMinutes = String(date.getMinutes()).padStart(2, '0')
+
+  let timeRange = `${startHours}:${startMinutes}〜`
+  if (durationMin != null) {
+    const endDate = new Date(date.getTime() + durationMin * 60 * 1000)
+    const endHours = String(endDate.getHours()).padStart(2, '0')
+    const endMinutes = String(endDate.getMinutes()).padStart(2, '0')
+    timeRange = `${startHours}:${startMinutes}〜${endHours}:${endMinutes}`
+  }
+
+  return `${name}さん、${month}月${day}日 ${timeRange} 予約を確定しました。お待ちしております🌸`
+}
