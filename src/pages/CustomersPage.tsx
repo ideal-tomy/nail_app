@@ -140,7 +140,7 @@ export function CustomersPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-x-2 gap-y-4 pt-1">
         {filteredCustomers.map((customer) => {
           const cardData = cardDataMap?.get(customer.id)
 

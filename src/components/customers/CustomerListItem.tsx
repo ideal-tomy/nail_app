@@ -27,7 +27,7 @@ export function CustomerListItem({
         status={status}
         latestVisit={latestVisit}
         upcomingReservation={upcomingReservation}
-        variant="grid"
+        variant="tile"
         className="h-full transition hover:bg-blush active:bg-petal/30"
       />
     </Link>

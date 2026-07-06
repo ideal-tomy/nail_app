@@ -16,7 +16,7 @@ export function ContactRecommendCard({
   onCompose,
 }: ContactRecommendCardProps) {
   return (
-    <ScrollCard>
+    <ScrollCard className="overflow-visible pt-2">
       <Card padding="sm" className="h-full overflow-hidden p-0">
         <Link
           to={`/customers/${recommendation.id}`}
@@ -28,7 +28,7 @@ export function ContactRecommendCard({
             status={recommendation}
             latestVisit={recommendation.latestVisit}
             upcomingReservation={recommendation.upcomingReservation}
-            variant="scroll"
+            variant="tile"
             bare
           />
         </Link>

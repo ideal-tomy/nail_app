@@ -25,7 +25,7 @@ interface ScrollCardProps {
 }
 
 const cardWidthClass =
-  'w-[calc((min(100vw,42rem)-2rem-0.75rem)/2.5)] shrink-0 snap-start'
+  'w-[calc((min(100vw,42rem)-2rem-0.75rem)/2.5)] shrink-0 snap-start overflow-visible'
 
 export function ScrollCard({ children, className = '', onClick }: ScrollCardProps) {
   const cardClass = `${cardWidthClass} ${className}`
