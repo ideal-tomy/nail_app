@@ -3,10 +3,11 @@ import { isContactRecommended } from '../lib/messageTemplates'
 import { useCustomerStatuses } from './useCustomers'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import type { CustomerStatus, VisitWithImages } from '../types/database'
+import type { CustomerStatus, Reservation, VisitWithImages } from '../types/database'
 
 export interface ContactRecommendation extends CustomerStatus {
   latestVisit: VisitWithImages | null
+  upcomingReservation: Reservation | null
 }
 
 export function useContactRecommendations() {
@@ -41,6 +42,25 @@ export function useContactRecommendations() {
         .map((id) => (statuses as CustomerStatus[]).find((s) => s.id === id))
         .filter(Boolean) as CustomerStatus[]
 
+      const now = new Date().toISOString()
+
+      const { data: reservations, error: reservationError } = await supabase
+        .from('reservations')
+        .select('*')
+        .in('customer_id', recommendedIds)
+        .eq('status', 'booked')
+        .gte('start_at', now)
+        .order('start_at', { ascending: true })
+
+      if (reservationError) throw reservationError
+
+      const nextReservationByCustomer = new Map<string, Reservation>()
+      for (const reservation of (reservations ?? []) as Reservation[]) {
+        if (!nextReservationByCustomer.has(reservation.customer_id)) {
+          nextReservationByCustomer.set(reservation.customer_id, reservation)
+        }
+      }
+
       const results: ContactRecommendation[] = []
 
       for (const status of ordered) {
@@ -57,6 +77,7 @@ export function useContactRecommendations() {
         results.push({
           ...status,
           latestVisit: visit as VisitWithImages | null,
+          upcomingReservation: nextReservationByCustomer.get(status.id) ?? null,
         })
       }
 

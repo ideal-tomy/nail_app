@@ -1,124 +1,124 @@
-import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import {
+  formatReservationDate,
+  formatReservationTime,
+} from '../../hooks/useReservations'
 import { formatDate } from '../../lib/messageTemplates'
-import type { Customer, VisitWithImages } from '../../types/database'
+import type { Customer, Reservation, VisitWithImages } from '../../types/database'
 import { SignedImage } from '../images/SignedImage'
 import { Button } from '../ui/Button'
-import { HorizontalScroll, ScrollCard } from '../ui/HorizontalScroll'
+import { Card } from '../ui/Card'
 
 interface CustomerInfoCardsProps {
   customer: Customer
   latestVisit: VisitWithImages | null
+  upcomingReservation: Reservation | null
   onEdit: () => void
 }
 
-function InfoCard({
-  label,
-  children,
-  className = '',
-}: {
-  label: string
-  children: ReactNode
-  className?: string
-}) {
+function SectionLabel({ children }: { children: string }) {
   return (
-    <article
-      className={`flex aspect-square flex-col overflow-hidden rounded-3xl border border-petal/70 bg-blush/50 shadow-sm ${className}`}
-    >
-      <div className="flex flex-1 flex-col p-3">
-        <p className="text-xs text-mauve">{label}</p>
-        <div className="mt-1 flex-1 overflow-hidden text-sm leading-relaxed text-ink">
-          {children}
-        </div>
-      </div>
-    </article>
+    <p className="text-xs font-medium tracking-wide text-mauve uppercase">
+      {children}
+    </p>
+  )
+}
+
+function MemoBlock({ label, content }: { label: string; content: string }) {
+  return (
+    <Card padding="sm">
+      <SectionLabel>{label}</SectionLabel>
+      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink">
+        {content}
+      </p>
+    </Card>
   )
 }
 
 export function CustomerInfoCards({
   customer,
   latestVisit,
+  upcomingReservation,
   onEdit,
 }: CustomerInfoCardsProps) {
   const latestImage = latestVisit?.visit_images?.[0]
 
   return (
-    <HorizontalScroll>
-      <ScrollCard>
-        <InfoCard label="基本情報">
-          <p className="line-clamp-2 text-base font-medium">{customer.name}</p>
-          {customer.contact && (
-            <p className="mt-2 line-clamp-3 text-xs text-mauve">{customer.contact}</p>
-          )}
-          <div className="mt-auto pt-2">
-            <Button variant="secondary" className="w-full px-2 text-xs" onClick={onEdit}>
-              編集
-            </Button>
+    <div className="space-y-3">
+      <Card padding="sm">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <SectionLabel>基本情報</SectionLabel>
+            <p className="mt-1 text-lg font-medium text-ink">{customer.name}</p>
+            {customer.contact && (
+              <p className="mt-1 text-sm text-mauve">{customer.contact}</p>
+            )}
           </div>
-        </InfoCard>
-      </ScrollCard>
+          <Button variant="secondary" className="shrink-0 text-xs" onClick={onEdit}>
+            編集
+          </Button>
+        </div>
+      </Card>
+
+      <Card padding="sm">
+        <SectionLabel>来店予定</SectionLabel>
+        {upcomingReservation ? (
+          <p className="mt-2 text-sm text-ink">
+            {formatReservationDate(upcomingReservation.start_at)}{' '}
+            {formatReservationTime(upcomingReservation.start_at)}
+            {upcomingReservation.menu && (
+              <span className="mt-1 block text-xs text-mauve">
+                {upcomingReservation.menu}
+              </span>
+            )}
+          </p>
+        ) : (
+          <p className="mt-2 text-sm text-mauve">予定無し</p>
+        )}
+      </Card>
+
+      <Card padding="sm">
+        <SectionLabel>前回来店</SectionLabel>
+        {latestVisit ? (
+          <div className="mt-2 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-petal px-2.5 py-0.5 text-xs text-plum">
+                {formatDate(latestVisit.visit_date)}
+              </span>
+              {latestVisit.price != null && (
+                <span className="text-xs text-mauve">
+                  ¥{latestVisit.price.toLocaleString()}
+                </span>
+              )}
+            </div>
+
+            {latestVisit.design_notes && (
+              <p className="text-sm leading-relaxed text-ink">
+                {latestVisit.design_notes}
+              </p>
+            )}
+
+            <SignedImage
+              storagePath={latestImage?.storage_path}
+              alt={`${customer.name} の前回デザイン`}
+              className="aspect-[4/3] w-full rounded-2xl"
+            />
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-mauve">来店履歴はまだありません</p>
+        )}
+      </Card>
 
       {customer.booking_notes && (
-        <ScrollCard>
-          <InfoCard label="予約対応メモ">
-            <p className="line-clamp-[7] whitespace-pre-wrap">{customer.booking_notes}</p>
-          </InfoCard>
-        </ScrollCard>
+        <MemoBlock label="予約対応メモ" content={customer.booking_notes} />
       )}
 
       {customer.preferences && (
-        <ScrollCard>
-          <InfoCard label="好み・季節メモ">
-            <p className="line-clamp-[7] whitespace-pre-wrap">{customer.preferences}</p>
-          </InfoCard>
-        </ScrollCard>
+        <MemoBlock label="好み・季節メモ" content={customer.preferences} />
       )}
 
       {customer.notes && (
-        <ScrollCard>
-          <InfoCard label="自由メモ">
-            <p className="line-clamp-[7] whitespace-pre-wrap">{customer.notes}</p>
-          </InfoCard>
-        </ScrollCard>
+        <MemoBlock label="自由メモ" content={customer.notes} />
       )}
-
-      {latestVisit && (
-        <ScrollCard>
-          <Link to={`/customers/${customer.id}`} className="block">
-            <article className="flex aspect-square flex-col overflow-hidden rounded-3xl border border-petal/70 bg-blush/50 shadow-sm">
-              <SignedImage
-                storagePath={latestImage?.storage_path}
-                alt={`${customer.name} の前回デザイン`}
-                className="aspect-square w-full shrink-0"
-              />
-              <div className="flex flex-1 flex-col p-3">
-                <p className="text-xs text-mauve">前回来店</p>
-                <p className="mt-0.5 text-sm font-medium">
-                  {formatDate(latestVisit.visit_date)}
-                </p>
-                {latestVisit.design_notes && (
-                  <p className="mt-1 line-clamp-2 text-xs text-mauve">
-                    {latestVisit.design_notes}
-                  </p>
-                )}
-                {latestVisit.price != null && (
-                  <p className="mt-auto inline-block w-fit rounded-full bg-petal px-2 py-0.5 text-xs text-plum">
-                    ¥{latestVisit.price.toLocaleString()}
-                  </p>
-                )}
-              </div>
-            </article>
-          </Link>
-        </ScrollCard>
-      )}
-
-      {!customer.preferences && !customer.notes && !customer.booking_notes && !latestVisit && (
-        <ScrollCard>
-          <InfoCard label="メモ">
-            <p className="text-mauve">メモはまだありません</p>
-          </InfoCard>
-        </ScrollCard>
-      )}
-    </HorizontalScroll>
+    </div>
   )
 }

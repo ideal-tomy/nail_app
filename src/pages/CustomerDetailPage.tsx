@@ -51,6 +51,11 @@ export function CustomerDetailPage() {
     [reservations],
   )
 
+  const upcomingReservation = useMemo(
+    () => upcomingReservations[0] ?? null,
+    [upcomingReservations],
+  )
+
   const initialForm: CustomerFormData | undefined = customer
     ? {
         name: customer.name,
@@ -112,6 +117,7 @@ export function CustomerDetailPage() {
     <CustomerInfoCards
       customer={customer}
       latestVisit={latestVisit}
+      upcomingReservation={upcomingReservation}
       onEdit={() => setShowEdit(true)}
     />
   )
