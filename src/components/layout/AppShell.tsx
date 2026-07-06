@@ -18,7 +18,6 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 const pageTitles: Record<string, string> = {
   '/': '連絡推奨',
   '/customers': '顧客一覧',
-  '/visits': '来店分析',
   '/calendar': '予約カレンダー',
   '/broadcast': '一斉配信',
 }
@@ -101,14 +100,6 @@ export function AppShell({ children }: AppShellProps) {
           >
             <span className="text-base sm:text-lg">♡</span>
             顧客
-          </NavLink>
-          <NavLink
-            to="/visits"
-            className={navLinkClass}
-            onClick={(event) => handleNavClick(event, '/visits', false)}
-          >
-            <span className="text-base sm:text-lg">◎</span>
-            来店
           </NavLink>
           <NavLink
             to="/calendar"
