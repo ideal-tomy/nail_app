@@ -5,6 +5,7 @@ import {
 } from '../../hooks/useReservations'
 import { TodayReservationTimeline } from '../reservations/TodayReservationTimeline'
 import { WeekScheduleStrip } from '../reservations/WeekScheduleStrip'
+import { TomorrowReminderSection } from './TomorrowReminderSection'
 
 export function HomeScheduleSection() {
   const { data: todayReservations = [], isLoading: todayLoading } =
@@ -25,6 +26,8 @@ export function HomeScheduleSection() {
       ) : (
         <WeekScheduleStrip reservations={weekReservations} />
       )}
+
+      <TomorrowReminderSection />
 
       <div>
         <h3 className="mb-3 text-base font-medium text-ink">今日の予定</h3>

@@ -117,3 +117,34 @@ export function buildReservationConfirmedMessage(
 
   return `${name}さん、${month}月${day}日 ${timeRange} 予約を確定しました。お待ちしております🌸`
 }
+
+export function getSalonMapsUrl(): string | undefined {
+  const url = import.meta.env.VITE_SALON_MAPS_URL?.trim()
+  return url || undefined
+}
+
+export function buildDayBeforeReminderMessage(
+  name: string,
+  startAt: string,
+  durationMin?: number | null,
+  mapsUrl?: string,
+): string {
+  const date = new Date(startAt)
+  const startHours = String(date.getHours()).padStart(2, '0')
+  const startMinutes = String(date.getMinutes()).padStart(2, '0')
+
+  let timeRange = `${startHours}:${startMinutes}`
+  if (durationMin != null) {
+    const endDate = new Date(date.getTime() + durationMin * 60 * 1000)
+    const endHours = String(endDate.getHours()).padStart(2, '0')
+    const endMinutes = String(endDate.getMinutes()).padStart(2, '0')
+    timeRange = `${startHours}:${startMinutes}〜${endHours}:${endMinutes}`
+  }
+
+  const resolvedMapsUrl = mapsUrl ?? getSalonMapsUrl()
+  const mapsLine = resolvedMapsUrl
+    ? `\n場所はこちら→ ${resolvedMapsUrl}`
+    : ''
+
+  return `${name}さん、明日${timeRange}からのご予約をお待ちしております🌸${mapsLine}\nご都合が変わった場合はお知らせください。`
+}

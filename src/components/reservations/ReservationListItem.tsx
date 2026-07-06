@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   formatCancelSource,
@@ -8,9 +9,11 @@ import {
   formatReservationDate,
   formatReservationTime,
 } from '../../hooks/useReservations'
+import type { BackNavigationState } from '../../lib/navigationState'
 import type { ReservationWithCustomer } from '../../types/database'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
+import { PreDayReminderModal } from './PreDayReminderModal'
 
 interface ReservationListItemProps {
   reservation: ReservationWithCustomer
@@ -20,6 +23,7 @@ interface ReservationListItemProps {
   onConvert?: () => void
   onConfirm?: () => void
   compact?: boolean
+  customerBackState?: BackNavigationState
 }
 
 const statusLabels = {
@@ -44,7 +48,11 @@ export function ReservationListItem({
   onConvert,
   onConfirm,
   compact = false,
+  customerBackState,
 }: ReservationListItemProps) {
+  const [expanded, setExpanded] = useState(false)
+  const [showReminder, setShowReminder] = useState(false)
+
   const customerName = reservation.customers?.name ?? '不明'
   const isBooked = reservation.status === 'booked'
   const isPastCanceled =
@@ -55,6 +63,12 @@ export function ReservationListItem({
       : isBooked && isTomorrowReservation(reservation.start_at)
         ? 'tomorrow'
         : null
+
+  const hasActions = Boolean(
+    isBooked && (onEdit || onReschedule || onCancel || onConvert || onConfirm),
+  )
+  const showFullActions =
+    hasActions && (urgency === 'today' || urgency === 'tomorrow' || expanded)
 
   return (
     <Card
@@ -72,6 +86,7 @@ export function ReservationListItem({
           <div className="flex flex-wrap items-center gap-2">
             <Link
               to={`/customers/${reservation.customer_id}`}
+              state={customerBackState}
               className="font-medium text-ink hover:text-plum"
             >
               {customerName}
@@ -118,8 +133,30 @@ export function ReservationListItem({
         </div>
       </div>
 
-      {isBooked && (onEdit || onReschedule || onCancel || onConvert || onConfirm) && (
+      {hasActions && !showFullActions && (
+        <div className="mt-3">
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={() => setExpanded(true)}
+          >
+            詳細
+          </Button>
+        </div>
+      )}
+
+      {showFullActions && (
         <div className="mt-3 space-y-3">
+          {urgency === 'tomorrow' && (
+            <Button
+              variant="line"
+              className="w-full"
+              onClick={() => setShowReminder(true)}
+            >
+              前日リマインド
+            </Button>
+          )}
+
           {onConfirm && (
             <Button variant="line" className="w-full" onClick={onConfirm}>
               予約確定（LINE通知）
@@ -163,8 +200,24 @@ export function ReservationListItem({
               </div>
             </div>
           )}
+
+          {expanded && urgency !== 'today' && urgency !== 'tomorrow' && (
+            <Button
+              variant="ghost"
+              className="w-full text-xs text-mauve"
+              onClick={() => setExpanded(false)}
+            >
+              閉じる
+            </Button>
+          )}
         </div>
       )}
+
+      <PreDayReminderModal
+        open={showReminder}
+        onClose={() => setShowReminder(false)}
+        reservation={reservation}
+      />
     </Card>
   )
 }

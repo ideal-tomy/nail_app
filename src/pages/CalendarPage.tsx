@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { todayISO } from '../lib/messageTemplates'
+import { backState } from '../lib/navigationState'
 import {
+  formatReservationDate,
+  formatReservationTime,
   getMonthRange,
   toDateKey,
   useReservations,
@@ -19,6 +22,7 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Modal } from '../components/ui/Modal'
+import { SaveSuccessCard } from '../components/ui/SaveSuccessCard'
 import { Tabs } from '../components/ui/Tabs'
 import { useToast } from '../components/ui/Toast'
 import { sendReservationConfirmedViaLine } from '../lib/line'
@@ -38,7 +42,10 @@ export function CalendarPage() {
   const [rescheduling, setRescheduling] = useState<ReservationWithCustomer | null>(null)
   const [canceling, setCanceling] = useState<ReservationWithCustomer | null>(null)
   const [converting, setConverting] = useState<ReservationWithCustomer | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const { showToast } = useToast()
+
+  const calendarBackState = backState('/calendar', 'カレンダーへ')
 
   const range = useMemo(() => getMonthRange(year, month), [year, month])
   const { data: monthReservations = [], isLoading } = useReservations(range)
@@ -123,6 +130,7 @@ export function CalendarPage() {
               <ReservationListItem
                 key={reservation.id}
                 reservation={reservation}
+                customerBackState={calendarBackState}
                 {...reservationActions(reservation)}
               />
             ))}
@@ -157,6 +165,7 @@ export function CalendarPage() {
         <ReservationListItem
           key={reservation.id}
           reservation={reservation}
+          customerBackState={calendarBackState}
           {...reservationActions(reservation)}
         />
       ))}
@@ -173,6 +182,13 @@ export function CalendarPage() {
         <Button onClick={() => setShowCreate(true)}>＋予約</Button>
       </section>
 
+      {successMessage && (
+        <SaveSuccessCard
+          message={successMessage}
+          onDismiss={() => setSuccessMessage(null)}
+        />
+      )}
+
       {todayReservations.length > 0 && (
         <Card padding="sm">
           <h3 className="text-sm font-medium text-plum">本日の予約 ({todayReservations.length}件)</h3>
@@ -182,6 +198,7 @@ export function CalendarPage() {
                 key={reservation.id}
                 reservation={reservation}
                 compact
+                customerBackState={calendarBackState}
                 {...reservationActions(reservation)}
               />
             ))}
@@ -203,9 +220,10 @@ export function CalendarPage() {
           initial={
             selectedDate ? { start_at: `${selectedDate}T10:00` } : undefined
           }
-          onSuccess={() => {
+          onSuccess={(saved) => {
             setShowCreate(false)
-            showToast('予約を追加しました')
+            const when = `${formatReservationDate(saved.start_at)} ${formatReservationTime(saved.start_at)}`
+            setSuccessMessage(`予約を追加しました — ${when}`)
           }}
           onCancel={() => setShowCreate(false)}
         />
@@ -215,9 +233,10 @@ export function CalendarPage() {
         {editing && (
           <ReservationForm
             reservation={editing}
-            onSuccess={() => {
+            onSuccess={(saved) => {
               setEditing(null)
-              showToast('予約を更新しました')
+              const when = `${formatReservationDate(saved.start_at)} ${formatReservationTime(saved.start_at)}`
+              setSuccessMessage(`予約を更新しました — ${when}`)
             }}
             onCancel={() => setEditing(null)}
           />
@@ -235,7 +254,7 @@ export function CalendarPage() {
             onClose={() => setRescheduling(null)}
             onSuccess={() => {
               setRescheduling(null)
-              showToast('予約日時を変更しました')
+              setSuccessMessage('予約日時を変更しました')
             }}
           />
         )}
@@ -252,7 +271,7 @@ export function CalendarPage() {
             onClose={() => setCanceling(null)}
             onSuccess={() => {
               setCanceling(null)
-              showToast('予約をキャンセルしました')
+              setSuccessMessage('予約をキャンセルしました')
             }}
           />
         )}
@@ -277,7 +296,7 @@ export function CalendarPage() {
             onCancel={() => setConverting(null)}
             onDone={() => {
               setConverting(null)
-              showToast('来店記録を登録しました')
+              setSuccessMessage('来店記録を登録しました')
             }}
           />
         )}

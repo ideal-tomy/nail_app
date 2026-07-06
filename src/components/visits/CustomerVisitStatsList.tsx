@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { formatDate, formatDaysSince } from '../../lib/messageTemplates'
+import { backState } from '../../lib/navigationState'
 import {
   formatIntervalDays,
   type CustomerVisitStats,
@@ -57,6 +58,7 @@ export function CustomerVisitStatsList({
           <Link
             key={stat.customerId}
             to={`/customers/${stat.customerId}`}
+            state={backState('/visits', '来店分析へ')}
             className="block rounded-2xl border border-petal/60 bg-blush/40 px-4 py-3 transition hover:bg-blush"
           >
             <div className="flex items-start justify-between gap-3">

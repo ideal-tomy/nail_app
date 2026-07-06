@@ -98,6 +98,41 @@ export function useTodayReservations() {
   })
 }
 
+export function useTomorrowReservations() {
+  return useQuery({
+    queryKey: ['reservations', 'tomorrow'],
+    queryFn: async () => {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const start = new Date(
+        tomorrow.getFullYear(),
+        tomorrow.getMonth(),
+        tomorrow.getDate(),
+      )
+      const end = new Date(
+        tomorrow.getFullYear(),
+        tomorrow.getMonth(),
+        tomorrow.getDate(),
+        23,
+        59,
+        59,
+        999,
+      )
+
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('*, customers(id, name, contact, booking_notes)')
+        .eq('status', 'booked')
+        .gte('start_at', start.toISOString())
+        .lte('start_at', end.toISOString())
+        .order('start_at', { ascending: true })
+
+      if (error) throw error
+      return data as ReservationWithCustomer[]
+    },
+  })
+}
+
 export function useWeekReservations() {
   const range = getWeekRange()
 

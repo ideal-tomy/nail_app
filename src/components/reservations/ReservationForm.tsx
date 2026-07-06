@@ -10,11 +10,15 @@ import {
 import type { ReservationFormData, ReservationWithCustomer } from '../../types/database'
 import { Button } from '../ui/Button'
 
+export interface ReservationSaveResult {
+  start_at: string
+}
+
 interface ReservationFormProps {
   initial?: Partial<ReservationFormData>
   reservation?: ReservationWithCustomer
   fixedCustomerId?: string
-  onSuccess: () => void
+  onSuccess: (saved: ReservationSaveResult) => void
   onCancel: () => void
 }
 
@@ -95,7 +99,7 @@ export function ReservationForm({
       } else {
         await create.mutateAsync(form)
       }
-      onSuccess()
+      onSuccess({ start_at: new Date(form.start_at).toISOString() })
     } catch (submitError) {
       setError(
         submitError instanceof Error ? submitError.message : '保存に失敗しました',

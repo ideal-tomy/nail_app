@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { compressImage, generateImagePath } from '../../lib/imageCompress'
 import { todayISO } from '../../lib/messageTemplates'
+import {
+  appendTemplateText,
+  designNoteTemplates,
+  workNoteTemplates,
+} from '../../lib/visitFormTemplates'
 import { supabase } from '../../lib/supabase'
 import type { VisitFormData } from '../../types/database'
 import { Button } from '../ui/Button'
@@ -156,20 +161,32 @@ export function VisitForm({
       </Field>
 
       <Field label="デザイン内容">
+        <TemplateChips
+          templates={designNoteTemplates}
+          onSelect={(text) =>
+            handleChange('design_notes', appendTemplateText(form.design_notes, text))
+          }
+        />
         <textarea
           value={form.design_notes}
           onChange={(e) => handleChange('design_notes', e.target.value)}
           className="field-input min-h-24"
-          placeholder="例: くすみピンクのワンカラー"
+          placeholder="例: ワンカラー（くすみピンク）"
         />
       </Field>
 
       <Field label="施術メモ">
+        <TemplateChips
+          templates={workNoteTemplates}
+          onSelect={(text) =>
+            handleChange('work_notes', appendTemplateText(form.work_notes, text))
+          }
+        />
         <textarea
           value={form.work_notes}
           onChange={(e) => handleChange('work_notes', e.target.value)}
           className="field-input min-h-24"
-          placeholder="使用カラー・長さ・パーツなど"
+          placeholder="例: ベース: フィルイン / 長さ: 短め / カラー: #○○"
         />
       </Field>
 
@@ -231,5 +248,28 @@ function Field({
       </span>
       {children}
     </label>
+  )
+}
+
+function TemplateChips({
+  templates,
+  onSelect,
+}: {
+  templates: ReadonlyArray<{ label: string; text: string }>
+  onSelect: (text: string) => void
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {templates.map((template) => (
+        <button
+          key={template.label}
+          type="button"
+          onClick={() => onSelect(template.text)}
+          className="rounded-full border border-petal/70 bg-blush/50 px-3 py-1 text-xs text-plum transition hover:bg-petal/60"
+        >
+          {template.label}
+        </button>
+      ))}
+    </div>
   )
 }

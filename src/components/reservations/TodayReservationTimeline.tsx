@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import {
   formatReservationTimeRange,
 } from '../../hooks/useReservations'
+import { backState } from '../../lib/navigationState'
 import type { ReservationWithCustomer } from '../../types/database'
 import { Card } from '../ui/Card'
 import { EmptyState } from '../ui/EmptyState'
@@ -45,6 +46,7 @@ export function TodayReservationTimeline({
           <Link
             key={reservation.id}
             to={`/customers/${reservation.customer_id}`}
+            state={backState('/', 'ホームへ')}
             className="block"
           >
             <Card padding="sm" className="transition active:bg-petal/40">

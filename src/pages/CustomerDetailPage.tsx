@@ -1,45 +1,63 @@
-import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { useCustomer } from '../hooks/useCustomers'
-import { useCustomerReservations } from '../hooks/useReservations'
+import { useCustomer, useCustomerStatuses } from '../hooks/useCustomers'
+import {
+  formatReservationDate,
+  formatReservationTime,
+  useCustomerReservations,
+} from '../hooks/useReservations'
 import { useVisits } from '../hooks/useVisits'
+import { MessageEditorModal } from '../components/contact/MessageEditorModal'
+import { CustomerDetailHero } from '../components/customers/CustomerDetailHero'
 import { CustomerForm } from '../components/customers/CustomerForm'
-import { CustomerInfoCards } from '../components/customers/CustomerInfoCards'
-import { VisitHistoryItem } from '../components/visits/VisitHistoryItem'
+import { CustomerSalonMemos } from '../components/customers/CustomerSalonMemos'
+import { VisitHistoryCompactList } from '../components/visits/VisitHistoryCompactList'
 import { VisitForm } from '../components/visits/VisitForm'
 import { ReservationCancelModal } from '../components/reservations/ReservationCancelModal'
 import { ReservationForm } from '../components/reservations/ReservationForm'
 import { ReservationListItem } from '../components/reservations/ReservationListItem'
 import { ReservationRescheduleModal } from '../components/reservations/ReservationRescheduleModal'
-import { Accordion, AccordionItem } from '../components/ui/Accordion'
+import { BackLink } from '../components/ui/BackLink'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Modal } from '../components/ui/Modal'
+import { SaveSuccessCard } from '../components/ui/SaveSuccessCard'
 import { Tabs } from '../components/ui/Tabs'
 import { useToast } from '../components/ui/Toast'
-import { sendOffReminderViaLine, sendReservationConfirmedViaLine } from '../lib/line'
-import { formatDate } from '../lib/messageTemplates'
+import { sendReservationConfirmedViaLine } from '../lib/line'
+import type { CustomerDetailNavigationState } from '../lib/navigationState'
 import { supabase } from '../lib/supabase'
 import type { CustomerFormData, ReservationWithCustomer } from '../types/database'
 
 export function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
   const queryClient = useQueryClient()
   const { showToast } = useToast()
   const { data: customer, isLoading, error } = useCustomer(id)
+  const { data: statuses = [] } = useCustomerStatuses()
   const { data: visits = [], isLoading: visitsLoading } = useVisits(id)
   const { data: reservations = [], isLoading: reservationsLoading } =
     useCustomerReservations(id)
 
-  const [activeTab, setActiveTab] = useState('info')
+  const navState = location.state as CustomerDetailNavigationState | null
+
+  const [activeTab, setActiveTab] = useState('visits')
   const [showEdit, setShowEdit] = useState(false)
   const [showVisit, setShowVisit] = useState(false)
   const [showReservation, setShowReservation] = useState(false)
+  const [showCompose, setShowCompose] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [editingReservation, setEditingReservation] =
     useState<ReservationWithCustomer | null>(null)
   const [rescheduling, setRescheduling] = useState<ReservationWithCustomer | null>(null)
   const [canceling, setCanceling] = useState<ReservationWithCustomer | null>(null)
+
+  const status = useMemo(
+    () => statuses.find((item) => item.id === id),
+    [statuses, id],
+  )
 
   const latestVisit = useMemo(() => visits[0] ?? null, [visits])
   const upcomingReservations = useMemo(
@@ -55,6 +73,13 @@ export function CustomerDetailPage() {
     () => upcomingReservations[0] ?? null,
     [upcomingReservations],
   )
+
+  useEffect(() => {
+    if (navState?.openReservation) {
+      setShowReservation(true)
+      setActiveTab('reservations')
+    }
+  }, [navState?.openReservation])
 
   const initialForm: CustomerFormData | undefined = customer
     ? {
@@ -102,7 +127,7 @@ export function CustomerDetailPage() {
     await queryClient.invalidateQueries({ queryKey: ['customers'] })
     await queryClient.invalidateQueries({ queryKey: ['reservations'] })
     setShowEdit(false)
-    showToast('顧客情報を更新しました')
+    setSuccessMessage('顧客情報を更新しました')
   }
 
   if (isLoading) {
@@ -112,15 +137,6 @@ export function CustomerDetailPage() {
   if (error || !customer) {
     return <p className="text-sm text-plum">顧客が見つかりません</p>
   }
-
-  const infoContent = (
-    <CustomerInfoCards
-      customer={customer}
-      latestVisit={latestVisit}
-      upcomingReservation={upcomingReservation}
-      onEdit={() => setShowEdit(true)}
-    />
-  )
 
   const visitsContent = (
     <div className="space-y-3">
@@ -138,32 +154,7 @@ export function CustomerDetailPage() {
       )}
 
       {visits.length > 0 && (
-        <Accordion>
-          {visits.map((visit, index) => (
-            <AccordionItem
-              key={visit.id}
-              defaultOpen={index === 0}
-              title={
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium text-ink">
-                    {formatDate(visit.visit_date)}
-                  </span>
-                  {visit.design_notes && (
-                    <span className="truncate text-sm text-mauve">
-                      {visit.design_notes}
-                    </span>
-                  )}
-                </div>
-              }
-            >
-              <VisitHistoryItem
-                visit={visit}
-                customerName={customer.name}
-                embedded
-              />
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <VisitHistoryCompactList visits={visits} customerName={customer.name} />
       )}
     </div>
   )
@@ -213,31 +204,41 @@ export function CustomerDetailPage() {
 
   return (
     <div className="space-y-5">
-      <Link to="/customers" className="inline-block text-sm text-mauve hover:text-plum">
-        ← 顧客一覧へ
-      </Link>
+      <BackLink />
 
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="text-xl font-medium text-ink">{customer.name} さん</h2>
-        <Button
-          variant="secondary"
-          className="shrink-0 text-xs"
-          onClick={() =>
-            sendOffReminderViaLine(customer.name, latestVisit?.design_notes)
-          }
-        >
-          LINEで連絡
-        </Button>
-      </div>
+      {successMessage && (
+        <SaveSuccessCard
+          message={successMessage}
+          onDismiss={() => setSuccessMessage(null)}
+        />
+      )}
+
+      <CustomerDetailHero
+        customer={customer}
+        status={status}
+        latestVisit={latestVisit}
+        upcomingReservation={upcomingReservation}
+        onEdit={() => setShowEdit(true)}
+        onCompose={() => setShowCompose(true)}
+      />
+
+      <CustomerSalonMemos customer={customer} onEdit={() => setShowEdit(true)} />
 
       <Tabs
         tabs={[
-          { id: 'info', label: '基本情報', content: infoContent },
           { id: 'visits', label: '来店履歴', content: visitsContent },
           { id: 'reservations', label: '予約', content: reservationsContent },
         ]}
         activeId={activeTab}
         onChange={setActiveTab}
+      />
+
+      <MessageEditorModal
+        open={showCompose}
+        onClose={() => setShowCompose(false)}
+        customerId={customer.id}
+        customerName={customer.name}
+        latestVisit={latestVisit}
       />
 
       <Modal open={showEdit} onClose={() => setShowEdit(false)} title="顧客情報を編集">
@@ -258,7 +259,8 @@ export function CustomerDetailPage() {
           onCancel={() => setShowVisit(false)}
           onDone={() => {
             setShowVisit(false)
-            showToast('来店を登録しました')
+            setActiveTab('visits')
+            setSuccessMessage('来店を登録しました')
           }}
         />
       </Modal>
@@ -270,9 +272,11 @@ export function CustomerDetailPage() {
       >
         <ReservationForm
           fixedCustomerId={customer.id}
-          onSuccess={() => {
+          onSuccess={(saved) => {
             setShowReservation(false)
-            showToast('予約を追加しました')
+            setActiveTab('reservations')
+            const when = `${formatReservationDate(saved.start_at)} ${formatReservationTime(saved.start_at)}`
+            setSuccessMessage(`予約を追加しました — ${when}`)
           }}
           onCancel={() => setShowReservation(false)}
         />
@@ -287,9 +291,10 @@ export function CustomerDetailPage() {
           <ReservationForm
             reservation={editingReservation}
             fixedCustomerId={customer.id}
-            onSuccess={() => {
+            onSuccess={(saved) => {
               setEditingReservation(null)
-              showToast('予約を更新しました')
+              const when = `${formatReservationDate(saved.start_at)} ${formatReservationTime(saved.start_at)}`
+              setSuccessMessage(`予約を更新しました — ${when}`)
             }}
             onCancel={() => setEditingReservation(null)}
           />
@@ -307,7 +312,7 @@ export function CustomerDetailPage() {
             onClose={() => setRescheduling(null)}
             onSuccess={() => {
               setRescheduling(null)
-              showToast('予約日時を変更しました')
+              setSuccessMessage('予約日時を変更しました')
             }}
           />
         )}
@@ -324,7 +329,7 @@ export function CustomerDetailPage() {
             onClose={() => setCanceling(null)}
             onSuccess={() => {
               setCanceling(null)
-              showToast('予約をキャンセルしました')
+              setSuccessMessage('予約をキャンセルしました')
             }}
           />
         )}
