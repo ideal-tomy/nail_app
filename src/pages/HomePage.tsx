@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useContactRecommendations } from '../hooks/useContactRecommendations'
 import { ContactRecommendCard } from '../components/contact/ContactRecommendCard'
 import { MessageEditorModal } from '../components/contact/MessageEditorModal'
-import { Button } from '../components/ui/Button'
-import { Card } from '../components/ui/Card'
+import { HorizontalScroll } from '../components/ui/HorizontalScroll'
 import { EmptyState } from '../components/ui/EmptyState'
 
 export function HomePage() {
@@ -22,22 +20,6 @@ export function HomePage() {
         </p>
       </section>
 
-      <Card padding="sm">
-        <p className="mb-3 text-sm font-medium text-ink">クイック操作</p>
-        <div className="grid grid-cols-2 gap-2">
-          <Link to="/broadcast">
-            <Button variant="secondary" className="w-full text-xs sm:text-sm">
-              一斉送信
-            </Button>
-          </Link>
-          <Link to="/visits">
-            <Button variant="secondary" className="w-full text-xs sm:text-sm">
-              来店分析
-            </Button>
-          </Link>
-        </div>
-      </Card>
-
       {isLoading && (
         <p className="text-sm text-mauve">読み込み中...</p>
       )}
@@ -52,15 +34,17 @@ export function HomePage() {
         <EmptyState title="今は連絡推奨の顧客はいません" />
       )}
 
-      <div className="space-y-4">
-        {recommendations.map((recommendation) => (
-          <ContactRecommendCard
-            key={recommendation.id}
-            recommendation={recommendation}
-            onCompose={() => setSelectedId(recommendation.id)}
-          />
-        ))}
-      </div>
+      {!isLoading && !error && recommendations.length > 0 && (
+        <HorizontalScroll>
+          {recommendations.map((recommendation) => (
+            <ContactRecommendCard
+              key={recommendation.id}
+              recommendation={recommendation}
+              onCompose={() => setSelectedId(recommendation.id)}
+            />
+          ))}
+        </HorizontalScroll>
+      )}
 
       {selected && (
         <MessageEditorModal

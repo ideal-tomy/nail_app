@@ -20,6 +20,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { Modal } from '../components/ui/Modal'
 import { Tabs } from '../components/ui/Tabs'
 import { useToast } from '../components/ui/Toast'
+import { sendReservationConfirmedViaLine } from '../lib/line'
 
 export function CalendarPage() {
   const now = new Date()
@@ -75,6 +76,14 @@ export function CalendarPage() {
     onReschedule: () => setRescheduling(reservation),
     onCancel: () => setCanceling(reservation),
     onConvert: () => setConverting(reservation),
+    onConfirm: () => {
+      sendReservationConfirmedViaLine(
+        reservation.customers?.name ?? 'お客様',
+        reservation.start_at,
+        reservation.duration_min,
+      )
+      showToast('LINEで予約確定の通知を送ります')
+    },
   })
 
   const calendarContent = (

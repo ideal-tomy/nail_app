@@ -5,21 +5,20 @@ import { useCustomer } from '../hooks/useCustomers'
 import { useCustomerReservations } from '../hooks/useReservations'
 import { useVisits } from '../hooks/useVisits'
 import { CustomerForm } from '../components/customers/CustomerForm'
-import { LatestVisitSection } from '../components/visits/LatestVisitSection'
+import { CustomerInfoCards } from '../components/customers/CustomerInfoCards'
 import { VisitHistoryItem } from '../components/visits/VisitHistoryItem'
 import { VisitForm } from '../components/visits/VisitForm'
 import { ReservationCancelModal } from '../components/reservations/ReservationCancelModal'
 import { ReservationForm } from '../components/reservations/ReservationForm'
 import { ReservationListItem } from '../components/reservations/ReservationListItem'
 import { ReservationRescheduleModal } from '../components/reservations/ReservationRescheduleModal'
-import { MessageEditorModal } from '../components/contact/MessageEditorModal'
 import { Accordion, AccordionItem } from '../components/ui/Accordion'
 import { Button } from '../components/ui/Button'
-import { Card } from '../components/ui/Card'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Modal } from '../components/ui/Modal'
 import { Tabs } from '../components/ui/Tabs'
 import { useToast } from '../components/ui/Toast'
+import { sendReservationConfirmedViaLine } from '../lib/line'
 import { formatDate } from '../lib/messageTemplates'
 import { supabase } from '../lib/supabase'
 import type { CustomerFormData, ReservationWithCustomer } from '../types/database'
@@ -35,7 +34,6 @@ export function CustomerDetailPage() {
 
   const [activeTab, setActiveTab] = useState('info')
   const [showEdit, setShowEdit] = useState(false)
-  const [showMessage, setShowMessage] = useState(false)
   const [showVisit, setShowVisit] = useState(false)
   const [showReservation, setShowReservation] = useState(false)
   const [editingReservation, setEditingReservation] =
@@ -63,10 +61,20 @@ export function CustomerDetailPage() {
       }
     : undefined
 
+  const handleConfirmReservation = (reservation: ReservationWithCustomer) => {
+    sendReservationConfirmedViaLine(
+      customer?.name ?? reservation.customers?.name ?? 'お客様',
+      reservation.start_at,
+      reservation.duration_min,
+    )
+    showToast('LINEで予約確定の通知を送ります')
+  }
+
   const reservationActions = (reservation: ReservationWithCustomer) => ({
     onEdit: () => setEditingReservation(reservation),
     onReschedule: () => setRescheduling(reservation),
     onCancel: () => setCanceling(reservation),
+    onConfirm: () => handleConfirmReservation(reservation),
   })
 
   const handleUpdate = async (form: CustomerFormData) => {
@@ -101,60 +109,19 @@ export function CustomerDetailPage() {
   }
 
   const infoContent = (
-    <div className="space-y-4">
-      <Card>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-medium text-ink">{customer.name}</h3>
-            {customer.contact && (
-              <p className="mt-1 text-sm text-mauve">{customer.contact}</p>
-            )}
-          </div>
-          <Button variant="secondary" onClick={() => setShowEdit(true)}>
-            編集
-          </Button>
-        </div>
-
-        {customer.booking_notes && (
-          <div className="mt-4 rounded-2xl border border-petal/60 bg-petal/20 px-3 py-3">
-            <p className="text-sm text-plum">予約対応メモ</p>
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink">
-              {customer.booking_notes}
-            </p>
-          </div>
-        )}
-
-        {customer.preferences && (
-          <div className="mt-4">
-            <p className="text-sm text-mauve">好み・季節メモ</p>
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink">
-              {customer.preferences}
-            </p>
-          </div>
-        )}
-
-        {customer.notes && (
-          <div className="mt-4">
-            <p className="text-sm text-mauve">自由メモ</p>
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink">
-              {customer.notes}
-            </p>
-          </div>
-        )}
-
-        {!customer.preferences && !customer.notes && !customer.booking_notes && (
-          <p className="mt-4 text-sm text-mauve">メモはまだありません</p>
-        )}
-      </Card>
-
-      {latestVisit && (
-        <LatestVisitSection visit={latestVisit} customerName={customer.name} />
-      )}
-    </div>
+    <CustomerInfoCards
+      customer={customer}
+      latestVisit={latestVisit}
+      onEdit={() => setShowEdit(true)}
+    />
   )
 
   const visitsContent = (
     <div className="space-y-3">
+      <div className="flex justify-end">
+        <Button onClick={() => setShowVisit(true)}>来店を登録</Button>
+      </div>
+
       {visitsLoading && <p className="text-sm text-mauve">読み込み中...</p>}
 
       {!visitsLoading && visits.length === 0 && (
@@ -197,6 +164,10 @@ export function CustomerDetailPage() {
 
   const reservationsContent = (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button onClick={() => setShowReservation(true)}>予約を追加</Button>
+      </div>
+
       {reservationsLoading && <p className="text-sm text-mauve">読み込み中...</p>}
 
       {!reservationsLoading && reservations.length === 0 && (
@@ -240,34 +211,9 @@ export function CustomerDetailPage() {
         ← 顧客一覧へ
       </Link>
 
-      <Card padding="sm">
-        <p className="mb-3 text-sm font-medium text-ink">{customer.name} さん</p>
-        <div className="grid grid-cols-3 gap-2">
-          <Button
-            className="px-2 text-xs sm:text-sm"
-            onClick={() => setShowMessage(true)}
-          >
-            連絡
-          </Button>
-          <Button
-            variant="secondary"
-            className="px-2 text-xs sm:text-sm"
-            onClick={() => setShowVisit(true)}
-          >
-            来店
-          </Button>
-          <Button
-            variant="secondary"
-            className="px-2 text-xs sm:text-sm"
-            onClick={() => {
-              setActiveTab('reservations')
-              setShowReservation(true)
-            }}
-          >
-            予約
-          </Button>
-        </div>
-      </Card>
+      <div>
+        <h2 className="text-xl font-medium text-ink">{customer.name} さん</h2>
+      </div>
 
       <Tabs
         tabs={[
@@ -368,14 +314,6 @@ export function CustomerDetailPage() {
           />
         )}
       </Modal>
-
-      <MessageEditorModal
-        open={showMessage}
-        onClose={() => setShowMessage(false)}
-        customerId={customer.id}
-        customerName={customer.name}
-        latestVisit={latestVisit}
-      />
     </div>
   )
 }
