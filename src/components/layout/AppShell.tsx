@@ -1,9 +1,6 @@
-import { NavLink, useLocation, useMatch, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import type { MouseEvent, ReactNode } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { useCustomer } from '../../hooks/useCustomers'
-import { useVisits } from '../../hooks/useVisits'
-import { sendOffReminderViaLine } from '../../lib/line'
 import { Button } from '../ui/Button'
 
 interface AppShellProps {
@@ -34,34 +31,16 @@ export function AppShell({ children }: AppShellProps) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const customerMatch = useMatch('/customers/:id')
-  const customerId = customerMatch?.params.id
-  const { data: customer } = useCustomer(customerId)
-  const { data: visits = [] } = useVisits(customerId)
 
   const pageTitle = getPageTitle(location.pathname)
-  const isOnCustomerDetail = Boolean(customerId && customer)
-  const latestDesign = visits[0]?.design_notes
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/login')
   }
 
-  const handleQuickLine = () => {
-    if (!customer) return
-    sendOffReminderViaLine(customer.name, latestDesign)
-  }
-
-  const handleNavClick = (
-    event: MouseEvent,
-    path: string,
-    isLineAction: boolean,
-  ) => {
-    if (isOnCustomerDetail && isLineAction) {
-      event.preventDefault()
-      handleQuickLine()
-    } else if (location.pathname === path) {
+  const handleNavClick = (event: MouseEvent, path: string) => {
+    if (location.pathname === path) {
       event.preventDefault()
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -89,7 +68,7 @@ export function AppShell({ children }: AppShellProps) {
             to="/"
             end
             className={navLinkClass}
-            onClick={(event) => handleNavClick(event, '/', true)}
+            onClick={(event) => handleNavClick(event, '/')}
           >
             <span className="text-base sm:text-lg">✦</span>
             連絡
@@ -97,7 +76,7 @@ export function AppShell({ children }: AppShellProps) {
           <NavLink
             to="/customers"
             className={navLinkClass}
-            onClick={(event) => handleNavClick(event, '/customers', false)}
+            onClick={(event) => handleNavClick(event, '/customers')}
           >
             <span className="text-base sm:text-lg">♡</span>
             顧客
@@ -105,7 +84,7 @@ export function AppShell({ children }: AppShellProps) {
           <NavLink
             to="/visits"
             className={navLinkClass}
-            onClick={(event) => handleNavClick(event, '/visits', false)}
+            onClick={(event) => handleNavClick(event, '/visits')}
           >
             <span className="text-base sm:text-lg">◎</span>
             来店
@@ -113,7 +92,7 @@ export function AppShell({ children }: AppShellProps) {
           <NavLink
             to="/calendar"
             className={navLinkClass}
-            onClick={(event) => handleNavClick(event, '/calendar', false)}
+            onClick={(event) => handleNavClick(event, '/calendar')}
           >
             <span className="text-base sm:text-lg">◷</span>
             予約
@@ -121,7 +100,7 @@ export function AppShell({ children }: AppShellProps) {
           <NavLink
             to="/broadcast"
             className={navLinkClass}
-            onClick={(event) => handleNavClick(event, '/broadcast', true)}
+            onClick={(event) => handleNavClick(event, '/broadcast')}
           >
             <span className="text-base sm:text-lg">✉</span>
             配信
