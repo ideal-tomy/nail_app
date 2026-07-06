@@ -22,6 +22,22 @@ export function getMonthRange(year: number, month: number): MonthRange {
   }
 }
 
+/** 指定日を含む週（日曜始まり）の範囲 */
+export function getWeekRange(anchor: Date = new Date()): MonthRange {
+  const start = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate())
+  start.setDate(start.getDate() - start.getDay())
+  start.setHours(0, 0, 0, 0)
+
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  end.setHours(23, 59, 59, 999)
+
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
+  }
+}
+
 export function useReservations(range?: MonthRange) {
   return useQuery({
     queryKey: ['reservations', range?.start, range?.end],
@@ -74,6 +90,26 @@ export function useTodayReservations() {
         .eq('status', 'booked')
         .gte('start_at', start.toISOString())
         .lte('start_at', end.toISOString())
+        .order('start_at', { ascending: true })
+
+      if (error) throw error
+      return data as ReservationWithCustomer[]
+    },
+  })
+}
+
+export function useWeekReservations() {
+  const range = getWeekRange()
+
+  return useQuery({
+    queryKey: ['reservations', 'week', range.start, range.end],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('*, customers(id, name, contact, booking_notes)')
+        .eq('status', 'booked')
+        .gte('start_at', range.start)
+        .lte('start_at', range.end)
         .order('start_at', { ascending: true })
 
       if (error) throw error
@@ -280,6 +316,21 @@ export function formatReservationTime(isoString: string): string {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+export function formatReservationTimeRange(
+  startAt: string,
+  durationMin: number | null,
+): string {
+  const start = formatReservationTime(startAt)
+  if (durationMin == null) return start
+
+  const endDate = new Date(new Date(startAt).getTime() + durationMin * 60 * 1000)
+  const end = endDate.toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  return `${start} – ${end}`
 }
 
 export function formatReservationDate(isoString: string): string {

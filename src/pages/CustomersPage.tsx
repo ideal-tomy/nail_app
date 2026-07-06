@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useCustomers, useCustomerStatuses } from '../hooks/useCustomers'
+import {
+  useCustomerListCardData,
+  useCustomers,
+  useCustomerStatuses,
+} from '../hooks/useCustomers'
 import { CustomerListItem } from '../components/customers/CustomerListItem'
 import { CustomerForm } from '../components/customers/CustomerForm'
 import { Button } from '../components/ui/Button'
@@ -22,6 +26,12 @@ export function CustomersPage() {
     () => new Map(statuses.map((status) => [status.id, status])),
     [statuses],
   )
+
+  const customerIds = useMemo(
+    () => customers.map((customer) => customer.id),
+    [customers],
+  )
+  const { data: cardDataMap } = useCustomerListCardData(customerIds)
 
   const filteredCustomers = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
@@ -62,22 +72,21 @@ export function CustomersPage() {
       <section className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-medium text-ink">顧客一覧</h2>
-          <p className="mt-1 text-sm text-mauve">全顧客の検索と管理</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>＋新規</Button>
       </section>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="field-input sm:col-span-1"
+          className="field-input min-w-0"
           placeholder="名前で検索"
         />
         <select
           value={sortKey}
           onChange={(e) => setSortKey(e.target.value as SortKey)}
-          className="field-input"
+          className="field-input min-w-0"
         >
           <option value="name">名前順</option>
           <option value="lastVisit">最終来店日順</option>
@@ -92,14 +101,20 @@ export function CustomersPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
-        {filteredCustomers.map((customer) => (
-          <CustomerListItem
-            key={customer.id}
-            customer={customer}
-            status={statusMap.get(customer.id)}
-          />
-        ))}
+      <div className="grid grid-cols-3 gap-2">
+        {filteredCustomers.map((customer) => {
+          const cardData = cardDataMap?.get(customer.id)
+
+          return (
+            <CustomerListItem
+              key={customer.id}
+              customer={customer}
+              status={statusMap.get(customer.id)}
+              latestVisit={cardData?.latestVisit ?? null}
+              upcomingReservation={cardData?.upcomingReservation ?? null}
+            />
+          )
+        })}
       </div>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新規顧客">

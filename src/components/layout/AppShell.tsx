@@ -89,7 +89,7 @@ export function AppShell({ children }: AppShellProps) {
             to="/"
             end
             className={navLinkClass}
-            onClick={(event) => handleNavClick(event, '/', true)}
+            onClick={(event) => handleNavClick(event, '/', false)}
           >
             <span className="text-base sm:text-lg">✦</span>
             連絡

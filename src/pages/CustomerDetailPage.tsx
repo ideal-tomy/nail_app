@@ -18,7 +18,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { Modal } from '../components/ui/Modal'
 import { Tabs } from '../components/ui/Tabs'
 import { useToast } from '../components/ui/Toast'
-import { sendReservationConfirmedViaLine } from '../lib/line'
+import { sendOffReminderViaLine, sendReservationConfirmedViaLine } from '../lib/line'
 import { formatDate } from '../lib/messageTemplates'
 import { supabase } from '../lib/supabase'
 import type { CustomerFormData, ReservationWithCustomer } from '../types/database'
@@ -217,8 +217,17 @@ export function CustomerDetailPage() {
         ← 顧客一覧へ
       </Link>
 
-      <div>
+      <div className="flex items-start justify-between gap-3">
         <h2 className="text-xl font-medium text-ink">{customer.name} さん</h2>
+        <Button
+          variant="secondary"
+          className="shrink-0 text-xs"
+          onClick={() =>
+            sendOffReminderViaLine(customer.name, latestVisit?.design_notes)
+          }
+        >
+          LINEで連絡
+        </Button>
       </div>
 
       <Tabs

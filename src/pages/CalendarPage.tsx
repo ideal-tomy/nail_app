@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { todayISO } from '../lib/messageTemplates'
 import {
   getMonthRange,
@@ -23,10 +24,14 @@ import { useToast } from '../components/ui/Toast'
 import { sendReservationConfirmedViaLine } from '../lib/line'
 
 export function CalendarPage() {
-  const now = new Date()
-  const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth())
-  const [selectedDate, setSelectedDate] = useState<string | null>(todayISO())
+  const location = useLocation()
+  const initialDate =
+    (location.state as { selectedDate?: string } | null)?.selectedDate ?? todayISO()
+
+  const initial = new Date(initialDate)
+  const [year, setYear] = useState(initial.getFullYear())
+  const [month, setMonth] = useState(initial.getMonth())
+  const [selectedDate, setSelectedDate] = useState<string | null>(initialDate)
   const [activeTab, setActiveTab] = useState('calendar')
   const [showCreate, setShowCreate] = useState(false)
   const [editing, setEditing] = useState<ReservationWithCustomer | null>(null)

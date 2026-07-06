@@ -29,19 +29,21 @@ export function ContactRecommendCard({
           to={`/customers/${recommendation.id}`}
           className="block active:bg-petal/30"
         >
-          <div className="flex gap-2 p-2.5">
-            <SignedImage
-              storagePath={latestImage?.storage_path}
-              alt={`${recommendation.name} の前回デザイン`}
-              className="h-[4.5rem] w-[4.5rem] shrink-0 rounded-xl"
-            />
+          <div className="flex gap-2.5 p-2.5">
+            <div className="w-[4.5rem] shrink-0">
+              <SignedImage
+                storagePath={latestImage?.storage_path}
+                alt={`${recommendation.name} の前回デザイン`}
+                className="aspect-square w-full rounded-xl"
+              />
+              <p className="mt-1.5 line-clamp-2 text-center text-[11px] font-medium leading-tight text-ink">
+                {recommendation.name}
+              </p>
+            </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-1">
-                <p className="line-clamp-1 text-sm font-medium text-ink">
-                  {recommendation.name}
-                </p>
-                <span className="shrink-0 rounded-full bg-petal px-1.5 py-0.5 text-[9px] text-plum">
+              <div className="flex justify-end">
+                <span className="rounded-full bg-petal px-1.5 py-0.5 text-[9px] text-plum">
                   {formatDaysSince(recommendation.days_since)}
                 </span>
               </div>
