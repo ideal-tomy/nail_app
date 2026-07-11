@@ -46,7 +46,7 @@ export function CustomerDetailHero({
           編集
         </Button>
         <Button variant="line" className="flex-1 text-xs" onClick={onCompose}>
-          文面を作る
+          文面作成
         </Button>
       </div>
 

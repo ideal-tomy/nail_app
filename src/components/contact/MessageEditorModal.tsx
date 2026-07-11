@@ -5,6 +5,7 @@ import {
   messageTemplates,
 } from '../../lib/messageTemplates'
 import { copyMessage, sendViaLine } from '../../lib/line'
+import { pushOfficialLineMessage } from '../../lib/lineOfficial'
 import { supabase } from '../../lib/supabase'
 import type { VisitWithImages } from '../../types/database'
 import { SignedImage } from '../images/SignedImage'
@@ -18,6 +19,7 @@ interface MessageEditorModalProps {
   customerId: string
   customerName: string
   latestVisit: VisitWithImages | null
+  canPushOfficial?: boolean
 }
 
 export function MessageEditorModal({
@@ -26,12 +28,14 @@ export function MessageEditorModal({
   customerId,
   customerName,
   latestVisit,
+  canPushOfficial = false,
 }: MessageEditorModalProps) {
   const queryClient = useQueryClient()
   const { showToast } = useToast()
   const [templateId, setTemplateId] = useState(messageTemplates[0].id)
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
+  const [pushing, setPushing] = useState(false)
 
   const latestImage = latestVisit?.visit_images?.[0]
   const lastDesign = latestVisit?.design_notes ?? 'デザイン'
@@ -59,6 +63,23 @@ export function MessageEditorModal({
 
   const handleSendLine = () => {
     sendViaLine(message)
+  }
+
+  const handlePushOfficial = async () => {
+    setPushing(true)
+    try {
+      await pushOfficialLineMessage(customerId, message)
+      await queryClient.invalidateQueries({ queryKey: ['customer-status'] })
+      await queryClient.invalidateQueries({ queryKey: ['contact-recommendations'] })
+      showToast('公式LINEへ送信しました')
+      onClose()
+    } catch (pushError) {
+      showToast(
+        pushError instanceof Error ? pushError.message : '公式LINE送信に失敗しました',
+      )
+    } finally {
+      setPushing(false)
+    }
   }
 
   const handleMarkContacted = async () => {
@@ -126,12 +147,26 @@ export function MessageEditorModal({
         </label>
 
         <p className="text-xs leading-relaxed text-mauve">
-          「LINEで送る」はスマホ向けです。PCでは「文面をコピー」をご利用ください。
+          「LINEで送る」は共有画面での手動送信です。公式LINE連携済みなら「公式LINEで送る」が使えます。
         </p>
 
         <div className="space-y-3">
-          <Button variant="line" className="w-full" onClick={handleSendLine}>
-            LINEで送る
+          {canPushOfficial && (
+            <Button
+              variant="line"
+              className="w-full"
+              onClick={handlePushOfficial}
+              disabled={pushing}
+            >
+              {pushing ? '送信中...' : '公式LINEで送る'}
+            </Button>
+          )}
+          <Button
+            variant={canPushOfficial ? 'secondary' : 'line'}
+            className="w-full"
+            onClick={handleSendLine}
+          >
+            LINEで共有（手動）
           </Button>
           <Button variant="secondary" className="w-full" onClick={handleCopy}>
             文面をコピー

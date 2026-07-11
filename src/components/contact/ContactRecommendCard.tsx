@@ -42,7 +42,7 @@ export function ContactRecommendCard({
               onCompose()
             }}
           >
-            文面を作る
+            文面作成
           </Button>
         </div>
       </Card>

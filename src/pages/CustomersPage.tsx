@@ -69,6 +69,7 @@ export function CustomersPage() {
         preferences: form.preferences.trim() || null,
         notes: form.notes.trim() || null,
         booking_notes: form.booking_notes.trim() || null,
+        line_user_id: form.line_user_id.trim() || null,
       })
       .select('id, name')
       .single()

@@ -5,6 +5,8 @@ export interface Customer {
   preferences: string | null
   notes: string | null
   booking_notes: string | null
+  line_user_id: string | null
+  line_display_name: string | null
   created_at: string
 }
 
@@ -33,6 +35,20 @@ export interface ContactLog {
   message: string | null
 }
 
+export interface LineFollower {
+  id: string
+  line_user_id: string
+  display_name: string | null
+  picture_url: string | null
+  status_message: string | null
+  followed_at: string | null
+  unfollowed_at: string | null
+  customer_id: string | null
+  linked_at: string | null
+  created_at: string
+  updated_at: string | null
+}
+
 export interface CustomerStatus {
   id: string
   name: string
@@ -51,6 +67,7 @@ export interface CustomerFormData {
   preferences: string
   notes: string
   booking_notes: string
+  line_user_id: string
 }
 
 export interface VisitFormData {
@@ -104,6 +121,8 @@ export interface Database {
           preferences?: string | null
           notes?: string | null
           booking_notes?: string | null
+          line_user_id?: string | null
+          line_display_name?: string | null
           created_at?: string
         }
         Update: {
@@ -112,6 +131,8 @@ export interface Database {
           preferences?: string | null
           notes?: string | null
           booking_notes?: string | null
+          line_user_id?: string | null
+          line_display_name?: string | null
         }
         Relationships: []
       }
@@ -163,6 +184,35 @@ export interface Database {
           sent_at?: string
           channel?: string
           message?: string | null
+        }
+        Relationships: []
+      }
+      line_followers: {
+        Row: LineFollower
+        Insert: {
+          id?: string
+          line_user_id: string
+          display_name?: string | null
+          picture_url?: string | null
+          status_message?: string | null
+          followed_at?: string | null
+          unfollowed_at?: string | null
+          customer_id?: string | null
+          linked_at?: string | null
+          raw_event?: unknown
+          created_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          display_name?: string | null
+          picture_url?: string | null
+          status_message?: string | null
+          followed_at?: string | null
+          unfollowed_at?: string | null
+          customer_id?: string | null
+          linked_at?: string | null
+          raw_event?: unknown
+          updated_at?: string | null
         }
         Relationships: []
       }

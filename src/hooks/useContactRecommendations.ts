@@ -8,6 +8,7 @@ import type { CustomerStatus, Reservation, VisitWithImages } from '../types/data
 export interface ContactRecommendation extends CustomerStatus {
   latestVisit: VisitWithImages | null
   upcomingReservation: Reservation | null
+  line_user_id: string | null
 }
 
 export function useContactRecommendations() {
@@ -61,6 +62,19 @@ export function useContactRecommendations() {
         }
       }
 
+      const { data: customers, error: customerError } = await supabase
+        .from('customers')
+        .select('id, line_user_id')
+        .in('id', recommendedIds)
+
+      if (customerError) throw customerError
+
+      const lineIdByCustomer = new Map(
+        ((customers ?? []) as { id: string; line_user_id: string | null }[]).map(
+          (c) => [c.id, c.line_user_id],
+        ),
+      )
+
       const results: ContactRecommendation[] = []
 
       for (const status of ordered) {
@@ -78,6 +92,7 @@ export function useContactRecommendations() {
           ...status,
           latestVisit: visit as VisitWithImages | null,
           upcomingReservation: nextReservationByCustomer.get(status.id) ?? null,
+          line_user_id: lineIdByCustomer.get(status.id) ?? null,
         })
       }
 

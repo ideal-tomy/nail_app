@@ -15,6 +15,7 @@ const emptyForm: CustomerFormData = {
   preferences: '',
   notes: '',
   booking_notes: '',
+  line_user_id: '',
 }
 
 export function CustomerForm({
@@ -67,6 +68,17 @@ export function CustomerForm({
           onChange={(e) => handleChange('contact', e.target.value)}
           className="field-input"
           placeholder="例: LINE: はなこ / 090-xxxx"
+        />
+      </Field>
+      <Field
+        label="LINE userId（任意）"
+        hint="公式LINE連携用。U で始まるID。未連携なら空欄でOK"
+      >
+        <input
+          value={form.line_user_id}
+          onChange={(e) => handleChange('line_user_id', e.target.value)}
+          className="field-input font-mono text-xs"
+          placeholder="Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         />
       </Field>
       <Field label="好み・季節メモ">

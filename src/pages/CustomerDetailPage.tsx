@@ -11,6 +11,7 @@ import { useVisits } from '../hooks/useVisits'
 import { MessageEditorModal } from '../components/contact/MessageEditorModal'
 import { CustomerDetailHero } from '../components/customers/CustomerDetailHero'
 import { CustomerForm } from '../components/customers/CustomerForm'
+import { CustomerLineLinkCard } from '../components/customers/CustomerLineLinkCard'
 import { CustomerSalonMemos } from '../components/customers/CustomerSalonMemos'
 import { VisitHistoryCompactList } from '../components/visits/VisitHistoryCompactList'
 import { VisitForm } from '../components/visits/VisitForm'
@@ -88,6 +89,7 @@ export function CustomerDetailPage() {
         preferences: customer.preferences ?? '',
         notes: customer.notes ?? '',
         booking_notes: customer.booking_notes ?? '',
+        line_user_id: customer.line_user_id ?? '',
       }
     : undefined
 
@@ -118,6 +120,7 @@ export function CustomerDetailPage() {
         preferences: form.preferences.trim() || null,
         notes: form.notes.trim() || null,
         booking_notes: form.booking_notes.trim() || null,
+        line_user_id: form.line_user_id.trim() || null,
       })
       .eq('id', id)
 
@@ -222,6 +225,8 @@ export function CustomerDetailPage() {
         onCompose={() => setShowCompose(true)}
       />
 
+      <CustomerLineLinkCard customer={customer} />
+
       <CustomerSalonMemos customer={customer} onEdit={() => setShowEdit(true)} />
 
       <Tabs
@@ -239,6 +244,7 @@ export function CustomerDetailPage() {
         customerId={customer.id}
         customerName={customer.name}
         latestVisit={latestVisit}
+        canPushOfficial={Boolean(customer.line_user_id)}
       />
 
       <Modal open={showEdit} onClose={() => setShowEdit(false)} title="顧客情報を編集">
